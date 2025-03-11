@@ -111,7 +111,7 @@ class TimeTableGenerator:
 
     def schedule_lab_session(self, timetable: Dict, class_name: str,
                            lab_subject: str) -> Tuple[bool, Dict]:
-        """Schedule a lab session with consecutive periods (1-2-3 or 4-5-6 only)."""
+        """Schedule a lab session with consecutive periods."""
         consecutive_periods = self.get_consecutive_periods(lab_subject, class_name)
         total_hours = self.get_subject_hours(lab_subject, class_name)
         sessions_needed = total_hours // consecutive_periods
@@ -240,40 +240,53 @@ class TimeTableGenerator:
         raise Exception("Could not generate valid timetables after maximum attempts")
 
     def print_timetables(self, timetables: Dict) -> Dict:
-        """Generate a formatted representation of timetables."""
+        """Format timetables for display."""
         formatted_timetables = {}
-        for class_name in timetables.keys():
-            formatted_timetable = {
-                "table": [],
-                "distribution": []
-            }
+        
+        for class_name, timetable in timetables.items():
+            # Create header row with periods
+            header_row = ["Day/Period"]
+            for i in range(1, self.periods_per_day + 1):
+                header_row.append(f"Period {i}")
             
-            # Generate table
-            header = ["Day"] + [f"Period {i+1}" for i in range(self.periods_per_day)]
-            formatted_timetable["table"].append(header)
-            
+            # Create table with day rows
+            table = [header_row]
             for day in self.days:
-                row = [day] + timetables[class_name][day]
-                formatted_timetable["table"].append(row)
+                row = [day]
+                for period in range(self.periods_per_day):
+                    subject = timetable[day][period]
+                    # Get the assigned teacher for this slot if available
+                    teacher = ""
+                    if class_name in self.class_teacher_assignments and day in self.class_teacher_assignments[class_name]:
+                        if period in self.class_teacher_assignments[class_name][day]:
+                            if subject in self.class_teacher_assignments[class_name][day][period]:
+                                teacher = self.class_teacher_assignments[class_name][day][period][subject]
+                    
+                    cell_content = subject
+                    if teacher and subject != "Free" and subject != "Unassigned":
+                        cell_content = f"{subject}\n({teacher})"
+                    
+                    row.append(cell_content)
+                table.append(row)
             
-            # Generate distribution
-            total_free = sum(day.count("Free") for day in timetables[class_name].values())
-            
+            # Collect teacher assignments for each subject
+            teacher_assignments = {}
             for subject in self.class_subjects[class_name]:
-                scheduled = self.count_subject_hours(subject, timetables[class_name])
-                required = self.get_subject_hours(subject, class_name)
-                teacher = self.class_teacher_assignments[class_name].get(subject, "Unassigned")
-                
-                if self.is_lab_subject(subject, class_name):
-                    distribution = f"{subject}: {scheduled}/{required} hours ({scheduled//3} sessions of 3 periods each) (Teacher: {teacher})"
-                else:
-                    distribution = f"{subject}: {scheduled}/{required} hours (Teacher: {teacher})"
-                
-                formatted_timetable["distribution"].append(distribution)
+                for day in self.days:
+                    for period in range(self.periods_per_day):
+                        if timetable[day][period] == subject:
+                            if class_name in self.class_teacher_assignments and day in self.class_teacher_assignments[class_name]:
+                                if period in self.class_teacher_assignments[class_name][day]:
+                                    if subject in self.class_teacher_assignments[class_name][day][period]:
+                                        teacher = self.class_teacher_assignments[class_name][day][period][subject]
+                                        teacher_assignments[subject] = teacher
+                                        break
             
-            formatted_timetable["distribution"].append(f"Free Periods: {total_free} hours")
-            
-            formatted_timetables[class_name] = formatted_timetable
+            # Store formatted data
+            formatted_timetables[class_name] = {
+                "table": table,
+                "teacher_assignments": teacher_assignments
+            }
         
         return formatted_timetables
 
@@ -288,16 +301,32 @@ def generator():
 @app.route('/templates')
 def templates():
     # Get list of saved templates
-    template_files = [f for f in os.listdir(TEMPLATES_DIR) if f.endswith('.json')]
-    templates = []
-    for file in template_files:
-        with open(os.path.join(TEMPLATES_DIR, file), 'r') as f:
-            template = json.load(f)
-            templates.append({
-                'name': file[:-5],  # Remove .json extension
-                'data': template
-            })
-    return render_template('templates.html', templates=templates)
+    templates_list = []
+    if os.path.exists(TEMPLATES_DIR):
+        for filename in os.listdir(TEMPLATES_DIR):
+            if filename.endswith('.json'):
+                template_name = filename[:-5]  # Remove .json extension
+                template_path = os.path.join(TEMPLATES_DIR, filename)
+                
+                try:
+                    with open(template_path, 'r') as f:
+                        template_data = json.load(f)
+                        
+                    # Extract basic info for display
+                    classes = list(template_data.get('class_subjects', {}).keys())
+                    teachers = list(template_data.get('teachers', {}).keys())
+                    
+                    templates_list.append({
+                        'name': template_name,
+                        'classes': classes,
+                        'teachers': teachers,
+                        'periods_per_day': template_data.get('periods_per_day', 6),
+                        'days': template_data.get('days', [])
+                    })
+                except Exception as e:
+                    print(f"Error loading template {template_name}: {str(e)}")
+    
+    return render_template('templates.html', templates=templates_list)
 
 @app.route('/about')
 def about():
@@ -305,47 +334,92 @@ def about():
 
 @app.route('/generate_timetable', methods=['POST'])
 def generate_timetable():
-    user_input = request.json
-    print("Received user input:", user_input)
-    generator = TimeTableGenerator(user_input)
     try:
-        timetables = generator.generate_timetable()
-        formatted_timetables = generator.print_timetables(timetables)
-        return jsonify(formatted_timetables)
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        required_fields = ['periods_per_day', 'days', 'class_subjects', 'teachers']
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+            
+        # Validate data types and content
+        if not isinstance(data['periods_per_day'], int) or data['periods_per_day'] <= 0:
+            return jsonify({'error': 'Periods per day must be a positive integer'}), 400
+            
+        if not isinstance(data['days'], list) or not data['days']:
+            return jsonify({'error': 'Days must be a non-empty list'}), 400
+            
+        if not isinstance(data['class_subjects'], dict) or not data['class_subjects']:
+            return jsonify({'error': 'No classes or subjects provided'}), 400
+            
+        if not isinstance(data['teachers'], dict) or not data['teachers']:
+            return jsonify({'error': 'No teachers provided'}), 400
+            
+        # Validate teacher assignments
+        for class_name, subjects in data['class_subjects'].items():
+            for subject in subjects:
+                subject_teachers = [teacher for teacher, teacher_subjects in data['teachers'].items() 
+                                 if subject in teacher_subjects]
+                if not subject_teachers:
+                    return jsonify({'error': f'No teacher assigned for subject "{subject}" in class "{class_name}"'}), 400
+
+        # Create timetable generator instance
+        generator = TimeTableGenerator(data)
+        
+        try:
+            # Generate timetables
+            timetables = generator.generate_timetable()
+            formatted_timetables = generator.print_timetables(timetables)
+            return jsonify(formatted_timetables)
+        except Exception as e:
+            return jsonify({'error': f'Failed to generate timetable: {str(e)}'}), 500
+            
+    except json.JSONDecodeError:
+        return jsonify({'error': 'Invalid JSON data provided'}), 400
     except Exception as e:
-        print("Error:", str(e))
-        return jsonify({"error": str(e)}), 400
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/save_template', methods=['POST'])
 def save_template():
-    template_data = request.json
-    template_name = template_data.get('name', 'template')
-    template_content = template_data.get('content')
-    
-    if not template_content:
-        return jsonify({"error": "No template content provided"}), 400
-    
-    filename = f"{template_name}.json"
-    filepath = os.path.join(TEMPLATES_DIR, filename)
-    
     try:
-        with open(filepath, 'w') as f:
-            json.dump(template_content, f)
-        return jsonify({"message": "Template saved successfully"})
+        template_data = request.get_json()
+        template_name = template_data.get('name')
+        data = template_data.get('data')
+        
+        if not template_name or not data:
+            return jsonify({'error': 'Missing template name or data'}), 400
+        
+        # Sanitize template name
+        template_name = ''.join(c for c in template_name if c.isalnum() or c in ' _-')
+        
+        # Save template to file
+        template_path = os.path.join(TEMPLATES_DIR, f"{template_name}.json")
+        
+        with open(template_path, 'w') as f:
+            json.dump(data, f, indent=2)
+        
+        return jsonify({'success': True, 'message': 'Template saved successfully'})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/load_template/<template_name>')
 def load_template(template_name):
-    filepath = os.path.join(TEMPLATES_DIR, f"{template_name}.json")
     try:
-        with open(filepath, 'r') as f:
-            template = json.load(f)
-        return jsonify(template)
-    except FileNotFoundError:
-        return jsonify({"error": "Template not found"}), 404
+        template_path = os.path.join(TEMPLATES_DIR, f"{template_name}.json")
+        
+        if not os.path.exists(template_path):
+            return jsonify({'error': 'Template not found'}), 404
+        
+        with open(template_path, 'r') as f:
+            template_data = json.load(f)
+        
+        return jsonify(template_data)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/delete_template/<template_name>', methods=['DELETE'])
 def delete_template(template_name):

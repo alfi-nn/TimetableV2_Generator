@@ -422,12 +422,18 @@ button:hover::before {
 .class-timetable {
     background-color: var(--background-light);
     border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-md);
     padding: 2rem;
     margin-bottom: 3rem;
-    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    animation: fadeIn var(--transition-normal) forwards;
+}
+
+.class-timetable:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
 }
 
 .class-timetable::before {
@@ -436,25 +442,37 @@ button:hover::before {
     top: 0;
     left: 0;
     width: 100%;
-    height: 5px;
+    height: 8px;
     background: var(--primary-gradient);
+    z-index: 1;
 }
 
 .class-timetable h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
     color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
     position: relative;
     display: inline-block;
+}
+
+.class-timetable h2::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 50px;
+    height: 4px;
+    background: var(--accent-color);
+    border-radius: 2px;
 }
 
 .timetable {
     width: 100%;
     border-collapse: collapse;
+    margin-bottom: 2rem;
     border-radius: var(--border-radius-md);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
-    animation: fadeIn 0.8s ease;
 }
 
 .timetable th,
@@ -462,26 +480,25 @@ button:hover::before {
     padding: 1rem;
     text-align: center;
     border: 1px solid var(--border-color);
-    transition: var(--transition-fast);
+    transition: background-color var(--transition-fast);
 }
 
 .timetable th {
-    background: var(--primary-gradient);
+    background-color: var(--primary-color);
     color: var(--text-light);
     font-weight: 600;
     position: relative;
-    overflow: hidden;
+    padding: 1.2rem 1rem;
 }
 
 .timetable th::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    animation: shimmer 3s infinite;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .timetable tr:nth-child(even) {
@@ -490,9 +507,58 @@ button:hover::before {
 
 .timetable td:hover {
     background-color: rgba(67, 97, 238, 0.1);
-    transform: scale(1.05);
-    z-index: 10;
+    transform: scale(1.02);
+    z-index: 2;
+    box-shadow: 0 0 15px rgba(67, 97, 238, 0.2);
+}
+
+.teacher-assignments {
+    background-color: var(--background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    margin-top: 2rem;
     box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--accent-color);
+}
+
+.teacher-assignments h3 {
+    color: var(--accent-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+}
+
+.teacher-assignments ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.teacher-assignments li {
+    padding: 0.8rem 1rem;
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.teacher-assignments li:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.teacher-assignments li strong {
+    color: var(--primary-dark);
+    margin-right: 0.5rem;
+}
+
+.timetable-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    gap: 2rem;
 }
 
 /* Draggable Elements */
@@ -740,6 +806,14 @@ button:hover::before {
     .export-bar {
         flex-wrap: wrap;
     }
+    
+    .timetable-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .teacher-assignments ul {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -769,6 +843,16 @@ button:hover::before {
     .timetable th,
     .timetable td {
         padding: 0.5rem 0.25rem;
+    }
+    
+    .class-timetable {
+        padding: 1.5rem;
+    }
+    
+    .timetable th,
+    .timetable td {
+        padding: 0.8rem 0.5rem;
+        font-size: 0.9rem;
     }
 }
 
@@ -1080,4 +1164,157 @@ input[type="checkbox"]:checked::after {
     position: absolute;
     left: 0;
     color: var(--success-color);
+}
+
+.error-message {
+    background-color: rgba(230, 57, 70, 0.1);
+    border: 2px solid var(--error-color);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideIn var(--transition-normal) forwards;
+}
+
+.error-message .material-symbols-outlined {
+    color: var(--error-color);
+    font-size: 24px;
+}
+
+.error-message p {
+    color: var(--text-color);
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Templates Page Styles */
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.template-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.template-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.template-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.template-header h3 {
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
+    font-size: 1.4rem;
+}
+
+.template-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.template-content {
+    padding: 1.5rem;
+    flex-grow: 1;
+}
+
+.template-details p {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.template-details strong {
+    color: var(--text-color);
+}
+
+.template-actions {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.load-template-btn, .delete-template-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.load-template-btn {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    flex-grow: 1;
+}
+
+.load-template-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+.delete-template-btn {
+    background-color: transparent;
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+}
+
+.delete-template-btn:hover {
+    background-color: rgba(230, 57, 70, 0.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background-color: var(--background-secondary);
+    border-radius: var(--border-radius-lg);
+    margin: 2rem auto;
+    max-width: 600px;
+}
+
+.empty-state h3 {
+    margin: 1rem 0;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .templates-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .template-actions {
+        flex-direction: column;
+    }
 } 
