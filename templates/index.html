@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable Generator - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+    <meta name="theme-color" content="#4361ee">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">TimeTable Pro</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/generator" class="nav-link">Generator</a>
+                <a href="/templates" class="nav-link">Templates</a>
+                <a href="/about" class="nav-link">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container page-transition">
+        <header>
+            <h1>Welcome to TimeTable Pro</h1>
+            <p>Create optimized class schedules with intelligent lab constraints and teacher assignments</p>
+        </header>
+
+        <div class="features-grid">
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                </div>
+                <h3>Multiple Classes</h3>
+                <p>Generate timetables for multiple classes simultaneously while maintaining teacher availability</p>
+            </div>
+
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <span class="material-symbols-outlined">science</span>
+                </div>
+                <h3>Lab Support</h3>
+                <p>Automatic scheduling of lab sessions in consecutive periods with proper resource allocation</p>
+            </div>
+
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <span class="material-symbols-outlined">person</span>
+                </div>
+                <h3>Teacher Management</h3>
+                <p>Smart teacher assignment system that prevents scheduling conflicts</p>
+            </div>
+
+            <div class="card feature-card">
+                <div class="feature-icon">
+                    <span class="material-symbols-outlined">bolt</span>
+                </div>
+                <h3>Quick Setup</h3>
+                <p>Easy-to-use interface with predefined templates to get you started quickly</p>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>Ready to create your timetable?</h2>
+            <p>Start generating optimized schedules in minutes</p>
+            <a href="/generator" class="cta-button" id="getStartedBtn">Get Started <span class="material-symbols-outlined">arrow_forward</span></a>
+        </div>
+
+        <div class="info-section">
+            <div class="card info-card">
+                <h3>How It Works</h3>
+                <ol class="steps-list">
+                    <li><span class="badge">1</span> <span>Enter your class details and subjects</span></li>
+                    <li><span class="badge">2</span> <span>Add teachers and their subject specializations</span></li>
+                    <li><span class="badge">3</span> <span>Configure working days and periods</span></li>
+                    <li><span class="badge">4</span> <span>Generate optimized timetables instantly</span></li>
+                </ol>
+            </div>
+
+            <div class="card info-card">
+                <h3>Key Features</h3>
+                <ul class="feature-list">
+                    <li data-tooltip="Schedule labs efficiently"><span class="material-symbols-outlined">check_circle</span> <span>Intelligent lab session scheduling</span></li>
+                    <li data-tooltip="No overlapping teacher assignments"><span class="material-symbols-outlined">check_circle</span> <span>Conflict-free teacher assignments</span></li>
+                    <li data-tooltip="Handle multiple classes simultaneously"><span class="material-symbols-outlined">check_circle</span> <span>Multiple class support</span></li>
+                    <li data-tooltip="Set which days are working days"><span class="material-symbols-outlined">check_circle</span> <span>Flexible working days</span></li>
+                    <li data-tooltip="Define your own periods"><span class="material-symbols-outlined">check_circle</span> <span>Custom period configuration</span></li>
+                    <li data-tooltip="Export and reuse your configurations"><span class="material-symbols-outlined">check_circle</span> <span>Save and load templates</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>TimeTable Pro</h4>
+                <p>Making timetable generation simple and efficient</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="/generator">Generator</a>
+                <a href="/templates">Templates</a>
+                <a href="/about">About</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p>Email: support@timetablepro.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 TimeTable Pro. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="theme-toggle" id="themeToggle">
+        <span class="material-symbols-outlined">dark_mode</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html> 
